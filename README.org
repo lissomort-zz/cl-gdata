@@ -1,0 +1,137 @@
+Summary documentation for cl-gdata. Work in progress.
+
+This file is using Org Mode. If you opened this document in Emacs and
+only see the headers, go to the header row, and press TAB to open or
+close it.
+
+* Author Contact Information
+
+Elias Mårtenson
+- Email: [[lokedhs@gmail.com]]
+- Google+ profile: http://profiles.google.com/lokedhs
+
+* Introduction
+
+cl-gdata is a project aimed at implementing the Google GData API's in
+Common Lisp.
+
+* Compatilibity
+
+cl-gdata is being developed on SBCL, but all attempts are made to keep
+the code as standard as possible. That said, because of the numerous
+libraries being used, not all Lisp implementations are able to load
+this library.
+
+This project is currently known to work on:
+
+- SBCL
+- CCL
+
+It currently has problems with:
+
+- ABCL (Does not have a functioning implementation of Closer-MOP)
+- ECL (xpath does not load)
+- CLISP (Fails when loading classes with a metaclass. Problems with
+  the MOP implementation?)
+
+* API Documentation
+
+** Authenticating
+All API calls requires the user to be authenticated. Google provides
+several different authentication methods that can be used. The primary
+ways are: [[http://code.google.com/apis/gdata/docs/auth/overview.html#ClientLogin][ClientLogin]], [[http://code.google.com/apis/gdata/docs/auth/overview.html#authsub][AuthSub]] and [[http://code.google.com/apis/gdata/docs/auth/overview.html#OAuth][OAuth]].
+
+cl-gdata supports different implementations of authentication
+objects, although currently only ClientLogin is supported by means of
+the CL-GDATA-CLIENTLOGIN:CLIENTLOGIN-SESSION class.
+
+All functions that require authentication needs to be able to access a
+session instance that is responsible for handling the authentication
+process. The session can be specified using the keyword
+argument :SESSION and will default to the content of
+CL-GDATA:*GDATA-SESSION*.
+
+*** Authenticating With ClientLogin
+The ClientLogin session instance is created by instantiating the
+CL-GDATA-CLIENTLOGIN:CLIENTLOGIN-SESSION class:
+
+#+begin_src lisp
+(setq cl-gdata:*gdata-session*
+      (make-instance 'cl-gdata-clientlogin:clientlogin-session
+                     :user username
+                     :password password))
+#+end_src
+
+This will cause all subsequent calls to the GData functions to use
+ClientLogin with the given username and password.
+
+*** Authenticating With OAuth
+
+The OAuth autentication model is currently under development and does
+not work yet.
+
+** Document List API
+
+The document List API is used to access documents in Google Docs.
+
+All symbols for this part of the API is in the CL-GDATA-DOCS-LIST
+package. The examples assumes that this package is interned in the
+current package.
+
+*** Listing Documents
+
+Listing documents is performed using the LIST-DOCUMENTS function:
+
+#+begin_src lisp
+(list-documents)
+#+end_src
+
+Running the above results in something like the following:
+
+#+begin_src lisp
+(#<DOCUMENT "word document"> #<SPREADSHEET "Test spreadsheet">
+ #<DOCUMENT "Test document">)
+#+end_src
+
+*** Document Object Hierarchy
+
+All document classes inherit from the DOCUMENT class. This itself
+inherits from ATOM-FEED-ENTRY (see [[ATOM-FEED-ENTRY Class Description]]).
+
+| Slot               | Accessor                    | Description                                                    |
+|--------------------+-----------------------------+----------------------------------------------------------------|
+| id-url             | document-id-url             | The ID URL for this document                                   |
+| resource-id        | document-resource-id        | The resource ID. This value uniquely identifies this document. |
+| description        | document-description        | Human-readable description                                     |
+| suggested-filename | document-suggested-filename | The suggested name for the file when downloaded                |
+| updated            | document-updated            | The timestamp when the document was updated                    |
+| content            | document-content            | List of entries, each being a list of type and source URL      |
+
+** Spreadsheet API
+
+TODO: check the source code for now: spreadsheets.lisp
+
+** Contacts API
+
+TODO: check the source code for now: contacts.lisp
+
+** Picasa API
+
+TODO: check the source code for now: picasa.lisp
+
+** Google Code Issue Tracker API
+
+TODO: check the source code for now: issue-tracker.lisp
+** ATOM-FEED-ENTRY Class Description
+
+The class ATOM-FEED-ENTRY is the superclass of all classes that
+describe entries from an Atom feed. This includes all documents from
+Google Docs as well as Picasa documents and Google Contacts.
+
+The class has the following slots:
+
+| Slot     | Accessor         | Description                                   |
+|----------+------------------+-----------------------------------------------|
+| feeds    | feed-entry-feeds | A list of all <atom:link> elements            |
+| title    | feed-entry-title | The title of the element                      |
+| node-dom | node-dom         | The XML node that was read from the Atom feed |
