@@ -1,3 +1,0 @@
-* OAuth implementation
-
-https://github.com/mtravers/waybacker/blob/master/src/oauth2-google.lisp
